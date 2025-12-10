@@ -1,0 +1,15 @@
+# Foundry Configuration
+# Copy this file to .envrc and fill in your actual values
+# Run `direnv allow` after updating .envrc
+
+export FOUNDRY_TOKEN=your-foundry-token-here
+export FOUNDRY_BASE_URL=https://northslope.palantirfoundry.com
+
+# Ontology RID (full format: ri.ontology.main.ontology.xxxxxxxx)
+export FOUNDRY_ONTOLOGY_RID=ri.ontology.main.ontology.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# Ontology API Name (used in URLs, without ri. prefix)
+export FOUNDRY_ONTOLOGY_API_NAME=ontology-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# Function name for web search (Ontology Query function name)
+export FOUNDRY_WEB_SEARCH_FUNCTION_NAME=searchWebBatch

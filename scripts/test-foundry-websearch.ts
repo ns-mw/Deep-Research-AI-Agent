@@ -6,12 +6,19 @@
  * Usage: npx tsx scripts/test-foundry-websearch.ts
  */
 
-// Load environment variables from .env.local
+// Load environment variables from .env.local or .envrc (if using direnv, vars are already loaded)
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { existsSync } from 'fs';
 
-// Load .env.local file
-config({ path: resolve(process.cwd(), '.env.local') });
+// Try .env.local first, then .envrc (though direnv should already load .envrc)
+const envLocal = resolve(process.cwd(), '.env.local');
+const envrc = resolve(process.cwd(), '.envrc');
+if (existsSync(envLocal)) {
+  config({ path: envLocal });
+} else if (existsSync(envrc)) {
+  config({ path: envrc });
+}
 
 import { executeFoundrySearch } from '../src/app/api/deep-research/foundry-tools';
 
