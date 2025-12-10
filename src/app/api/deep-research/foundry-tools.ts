@@ -5,29 +5,30 @@
 // Note: foundryClient from foundry-osdk-client.ts is available for future ontology queries
 
 /**
- * Call a Foundry Function via HTTP
+ * Call a Foundry Ontology Query function via HTTP
  * Uses service user token (FOUNDRY_TOKEN) for authentication.
- * 
- * @param functionRid - The RID of the Foundry function to call
+ *
+ * @param functionName - The name of the Ontology Query function (e.g., 'searchWebBatch')
  * @param parameters - Parameters to pass to the function
  */
 async function callFoundryFunction(
-  functionRid: string,
+  functionName: string,
   parameters: Record<string, unknown>
 ): Promise<unknown> {
   const url = process.env.FOUNDRY_BASE_URL || "https://northslope.palantirfoundry.com";
-  const token = process.env.FOUNDRY_TOKEN; // Service user token
+  const token = process.env.FOUNDRY_TOKEN;
+  const ontologyApiName = process.env.FOUNDRY_ONTOLOGY_API_NAME;
 
   if (!token) {
     throw new Error("FOUNDRY_TOKEN environment variable is required");
   }
 
-  // Function RIDs must be: ri.function-registry.main.function.XXXX
-  if (!functionRid.startsWith('ri.function-registry')) {
-    throw new Error(`Invalid function RID: ${functionRid}. Must start with 'ri.function-registry'`);
+  if (!ontologyApiName) {
+    throw new Error("FOUNDRY_ONTOLOGY_API_NAME environment variable is required");
   }
 
-  const functionUrl = `${url}/api/v1/functions/${functionRid}/invoke`;
+  // Use Ontology Query endpoint format with API name (not full RID)
+  const functionUrl = `${url}/api/v2/ontologies/${ontologyApiName}/queries/${functionName}/execute`;
   console.log(`[Foundry] Calling: ${functionUrl}`);
 
   const response = await fetch(functionUrl, {
@@ -36,7 +37,7 @@ async function callFoundryFunction(
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`,
     },
-    body: JSON.stringify(parameters),
+    body: JSON.stringify({ parameters }),
   });
 
   if (!response.ok) {
@@ -48,38 +49,24 @@ async function callFoundryFunction(
 }
 
 /**
- * Web search via Foundry Function
- * Calls the Foundry function specified in FOUNDRY_WEB_SEARCH_FUNCTION_RID
- * 
+ * Web search via Foundry Ontology Query
+ * Calls the Ontology Query function specified in FOUNDRY_WEB_SEARCH_FUNCTION_NAME
+ *
  * The function expects: { queries: string[] }
  * Returns: JSON string with { success, totalQueries, searchResults: [...] }
  */
 async function webSearch(query: string): Promise<string> {
-  const functionRid = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_RID;
-  
+  const functionName = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_NAME || "searchWebBatch";
+
   // Debug logging
-  console.log("[DEBUG] FOUNDRY_WEB_SEARCH_FUNCTION_RID:", functionRid ? `Set: ${functionRid.substring(0, 50)}...` : "NOT SET");
+  console.log("[DEBUG] FOUNDRY_WEB_SEARCH_FUNCTION_NAME:", functionName);
   console.log("[DEBUG] All FOUNDRY_ env vars:", Object.keys(process.env).filter(k => k.startsWith('FOUNDRY_')).map(k => `${k}=${process.env[k]?.substring(0, 20)}...`));
 
-  if (!functionRid) {
-    console.warn("[WARNING] FOUNDRY_WEB_SEARCH_FUNCTION_RID not set, using mock data");
-    // Fallback to mock if function RID not configured
-    return JSON.stringify({
-      results: [
-        {
-          title: `Mock Web Result for "${query}"`,
-          url: "https://example.com/mock",
-          content: `This is placeholder content for the web search query: "${query}". Configure FOUNDRY_WEB_SEARCH_FUNCTION_RID to use actual Foundry function.`,
-        },
-      ],
-    }).slice(0, 15000);
-  }
-
   try {
-    console.log(`[Foundry] Calling web search function: ${functionRid} with query: ${query}`);
-    
+    console.log(`[Foundry] Calling web search function: ${functionName} with query: ${query}`);
+
     // Function expects queries as an array: { queries: string[] }
-    const result = await callFoundryFunction(functionRid, { queries: [query] });
+    const result = await callFoundryFunction(functionName, { queries: [query] });
     
     // The function returns a JSON string, which may be wrapped in a "value" field for ontology queries
     // Handle ontology query response format (wrapped in "value" field)
