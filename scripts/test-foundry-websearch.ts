@@ -30,16 +30,26 @@ async function testWebSearch() {
   console.log('\n📋 Environment Check:');
   console.log('─'.repeat(60));
   const token = process.env.FOUNDRY_TOKEN;
-  const functionRid = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_RID;
   const baseUrl = process.env.FOUNDRY_BASE_URL;
-  
+  const ontologyApiName = process.env.FOUNDRY_ONTOLOGY_API_NAME;
+  const functionName = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_NAME;
+  const ontologyRid = process.env.FOUNDRY_ONTOLOGY_RID;
+
   console.log(`FOUNDRY_TOKEN: ${token ? '✓ Set (' + token.substring(0, 20) + '...)' : '❌ Missing'}`);
-  console.log(`FOUNDRY_BASE_URL: ${baseUrl || 'Using default'}`);
-  console.log(`FOUNDRY_WEB_SEARCH_FUNCTION_RID: ${functionRid ? '✓ ' + functionRid : '❌ Missing (will use mock)'}`);
-  
+  console.log(`FOUNDRY_BASE_URL: ${baseUrl || '✓ Using default'}`);
+  console.log(`FOUNDRY_ONTOLOGY_API_NAME: ${ontologyApiName ? '✓ ' + ontologyApiName : '❌ Missing'}`);
+  console.log(`FOUNDRY_ONTOLOGY_RID: ${ontologyRid ? '✓ Set' : '❌ Missing'}`);
+  console.log(`FOUNDRY_WEB_SEARCH_FUNCTION_NAME: ${functionName || '✓ Using default (searchWebBatch)'}`);
+
   if (!token) {
     console.error('\n❌ FOUNDRY_TOKEN is required!');
-    console.error('   Make sure .env.local is loaded or export the variable');
+    console.error('   Make sure .envrc is loaded or export the variable');
+    process.exit(1);
+  }
+
+  if (!ontologyApiName) {
+    console.error('\n❌ FOUNDRY_ONTOLOGY_API_NAME is required!');
+    console.error('   Set it in .envrc (e.g., ontology-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)');
     process.exit(1);
   }
   

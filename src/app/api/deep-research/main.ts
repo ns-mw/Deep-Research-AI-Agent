@@ -18,7 +18,9 @@ export async function deepResearch(researchState: ResearchState, dataStream: any
 
         console.log("We are running on the itration number: ", iteration);
 
-        const searchResults = currentQueries.map((query: string) => search(query, researchState, activityTracker));
+        const searchResults = currentQueries.map((item: { query: string; source: "web" | "ontology" }) =>
+          search(item.query, item.source, researchState, activityTracker)
+        );
         const searchResultsResponses = await Promise.allSettled(searchResults)
 
         const allSearchResults = searchResultsResponses.filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled' && result.value.length > 0).map(result => result.value).flat()
@@ -47,7 +49,10 @@ if((analysis as any).sufficient){
 }
 
 
-        currentQueries = ((analysis as any).queries || []).filter((query:string) => !currentQueries.includes(query));
+        currentQueries = ((analysis as any).queries || []).filter(
+          (item: { query: string; source: string }) =>
+            !currentQueries.some((existing: { query: string }) => existing.query === item.query)
+        );
     }
 
     console.log("We are outside of the loop with total iterations: ", iteration)

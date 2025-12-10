@@ -1,8 +1,8 @@
 /**
- * Foundry search tools - using OSDK client for Foundry integration.
+ * Foundry search tools - Web search and Ontology search
  */
 
-// Note: foundryClient from foundry-osdk-client.ts is available for future ontology queries
+import { searchOntologyObjects, listObjectTypes as listOntologyObjectTypes } from '@/lib/foundry-client';
 
 /**
  * Call a Foundry Ontology Query function via HTTP
@@ -55,7 +55,7 @@ async function callFoundryFunction(
  * The function expects: { queries: string[] }
  * Returns: JSON string with { success, totalQueries, searchResults: [...] }
  */
-async function webSearch(query: string): Promise<string> {
+export async function webSearch(query: string): Promise<string> {
   const functionName = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_NAME || "searchWebBatch";
 
   // Debug logging
@@ -135,25 +135,88 @@ async function webSearch(query: string): Promise<string> {
 }
 
 /**
- * Ontology search (TODO: connect to Palantir Ontology via Foundry)
- * Currently returns mock data for testing.
+ * Ontology search via Palantir Foundry Ontology API
+ * Searches across ontology objects and returns relevant results
  */
-async function ontologySearch(query: string): Promise<string> {
-  // TODO: Replace with actual Foundry Ontology query
-  // const res = await callFoundryFunction('ri.function...ontology_rid', { query });
-  // return `[INTERNAL DATA]\n${JSON.stringify(res).slice(0, 15000)}`;
+export async function ontologySearch(query: string): Promise<string> {
+  try {
+    console.log(`[LIVE] Ontology search for: ${query}`);
 
-  console.log(`[MOCK] Ontology search for: ${query}`);
+    // Call the Foundry Ontology API with auto-discover enabled
+    // This will automatically search across available object types
+    const response = await searchOntologyObjects(query, {
+      maxResults: 10,
+      autoDiscover: true, // Automatically discover and search object types
+    });
 
-  return `[INTERNAL DATA]
-Mock ontology results for query: "${query}"
-- No real Ontology connection configured yet
-- Replace this placeholder with actual Foundry Ontology integration`.slice(0, 15000);
+    // Check if ontology search is configured
+    if (response.message === 'Ontology search not configured') {
+      return `[INTERNAL DATA - Not Configured]
+Ontology search is not configured. Set FOUNDRY_ONTOLOGY_RID environment variable to enable internal data search.`;
+    }
+
+    // Format the results for the research agent
+    const formattedResults = {
+      query,
+      totalCount: response.totalCount || 0,
+      searchedTypes: response.searchedTypes || [],
+      results: response.data?.map((obj) => ({
+        rid: obj.rid,
+        properties: obj.properties,
+      })) || [],
+      hasMore: !!response.nextPageToken,
+    };
+
+    // Truncate to stay within context limits (as per CLAUDE.md)
+    const jsonString = JSON.stringify(formattedResults, null, 2);
+    const truncated = jsonString.slice(0, 15000);
+
+    return `[INTERNAL DATA - Foundry Ontology]\n${truncated}${
+      jsonString.length > 15000 ? '\n...(truncated)' : ''
+    }`;
+  } catch (error) {
+    console.error('Error querying Foundry Ontology:', error);
+
+    // Fallback to a helpful error message
+    return `[INTERNAL DATA - Error]
+Failed to query Foundry Ontology for: "${query}"
+Error: ${error instanceof Error ? error.message : 'Unknown error'}
+
+This might be due to:
+- Missing FOUNDRY_ONTOLOGY_RID environment variable
+- Invalid authentication token
+- Network connectivity issues
+- Ontology configuration issues
+
+Please check your environment configuration.`;
+  }
+}
+
+/**
+ * List available object types in the Ontology
+ * Returns array of object type names (e.g., ["Employee", "Project", "Upload"])
+ */
+export async function listObjectTypes(): Promise<string[]> {
+  const ontologyRid = process.env.FOUNDRY_ONTOLOGY_RID;
+
+  if (!ontologyRid) {
+    console.warn('[listObjectTypes] FOUNDRY_ONTOLOGY_RID not set');
+    return [];
+  }
+
+  try {
+    const types = await listOntologyObjectTypes(ontologyRid);
+    return types;
+  } catch (error) {
+    console.error('[listObjectTypes] Error:', error);
+    return [];
+  }
 }
 
 /**
  * Execute both search tools and combine results.
  * Returns SearchResult[] format expected by research-functions.ts
+ * @deprecated Use webSearch() and ontologySearch() separately instead
  */
 export async function executeFoundrySearch(query: string) {
   const [webRes, ontologyRes] = await Promise.all([

@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test:api": "tsx scripts/test-api.ts",
     "test:foundry": "tsx scripts/test-foundry-direct.ts",
+    "test:ontology": "tsx scripts/test-ontology-query.ts",
     "test:websearch": "tsx scripts/test-foundry-websearch.ts"
   },
   "dependencies": {
