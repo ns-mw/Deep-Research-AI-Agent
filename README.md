@@ -1,49 +1,37 @@
-# Build Deep Research AI Agent with Next.js, Vercel AI SDk and LLMs like Gemini, Deepseek & Gpt-4o
+# Deep Research AI Agent
 
-A powerful Deep Research AI agent like Gemini or ChatGPT. Using Next.js, Vercel AI SDK, and Exa Search API, An intelligent system that generates follow-up questions, crafts optimal search queries, and compiles comprehensive research reports.
+A powerful deep research agent that leverages **Palantir Foundry's Language Model Service** to conduct comprehensive research across both internal ontology data and external web sources.
 
-![GitHub stars](https://img.shields.io/github/stars/codebucks27/Deep-Research-AI-Agent?style=social&logo=ApacheSpark&label=Stars)&nbsp;&nbsp;
-![GitHub forks](https://img.shields.io/github/forks/codebucks27/Deep-Research-AI-Agent?style=social&logo=KashFlow&maxAge=3600)&nbsp;&nbsp;
-![Github Followers](https://img.shields.io/github/followers/codebucks27.svg?style=social&label=Follow)&nbsp;&nbsp;<br />
+## Overview
 
-If you want to learn how to create it please follow below tutorial👇: <br />
-➡ Tutorial Link 💚: [Deep research ai agent](https://youtu.be/zKN18GQBxCM) <br />
+This agent generates follow-up questions, crafts optimal search queries, and compiles comprehensive research reports through an iterative research loop. It seamlessly integrates both company-specific data from your Foundry Ontology and public web information to provide complete, contextualized research.
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/zKN18GQBxCM/0.jpg)](https://www.youtube.com/watch?v=zKN18GQBxCM)
+## Key Features
 
-🎯 For customised solutions or deployment please contact: https://tally.so/r/wdlj0N
+- **Dual-Source Search**: Simultaneously queries Foundry Ontology (internal) and Web (external) sources
+- **Intelligent Query Generation**: Creates diverse, targeted queries optimized for both data sources
+- **Iterative Research Loop**: Analyzes findings and generates follow-up queries to fill gaps
+- **Structured Ontology Integration**: Extracts entities, properties, and relationships from Foundry
+- **Comprehensive Reporting**: Generates detailed markdown reports with clear source attribution
+- **Real-time Streaming**: See research progress as it happens
 
-#### ⭐DO NOT FORGET TO STAR THIS REPO⭐
+## Tech Stack
 
-![deep research Ai Agent](https://github.com/codebucks27/Deep-Research-AI-Agent/blob/main/app%20screenshots/Final%20output%20with%20report.png)
+- **Framework**: Next.js 15 (App Router with Turbopack)
+- **AI Integration**: Vercel AI SDK with `@northslopetech/foundry-ai-sdk`
+- **Data Platform**: Palantir Foundry (Ontology API + LLM Service)
+- **Styling**: Tailwind CSS, Shadcn UI
+- **Language**: TypeScript
 
-## 🚀 Key Features  
-
-- 🔧 Fully Customizable Research Flow
-- 🔍 Adaptive Search Queries
-- ⚙️ Seamless LLM Integration
-- 💼 Modular Components
-- 🌐 Next.js & Vercel AI SDK
-- ♻️ Iterative Research Loop
-
-## 🛠️ Tech Stack
-
-- **Framework:** Next.js 15 (App Router)
-- **Styling:** Tailwind CSS, Shadcn UI
-- **AI Integration:** Vercel AI SDK
-- **LLMs:** GPT-4o, Gemini, Deepseel using OpenRouter
-- **Web Search:** Exa Search API
-- **UI Components:** Shadcn
-- **Language:** TypeScript
-
-## ⚡ Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have:
 
-- OpenRouter API key (or you can use grok or any other LLM providers) 
-- Exa search API key
+- Access to Palantir Foundry instance
+- Foundry API token with appropriate permissions
+- Your Foundry Ontology RID
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### 1. Clone the Repository
 
@@ -54,41 +42,88 @@ cd Deep-Research-AI-Agent
 
 ### 2. Install Dependencies
 
-> **NOTE:** When installing the required dependencies, use the `--legacy-peer-deps` flag if you encounter any issues with inter-dependent dependencies.
+> **NOTE:** Use the `--legacy-peer-deps` flag if you encounter dependency issues.
 
 ```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
+npm install --legacy-peer-deps
 ```
 
 ### 3. Environment Variables
 
-Create a `.env.local` file in the root directory. Check `.env.example` for required variables.
+Create a `.env.local` file (or `.envrc` if using direnv) with the following:
+
+```bash
+FOUNDRY_TOKEN=your_foundry_api_token
+FOUNDRY_BASE_URL=https://your-instance.palantirfoundry.com
+FOUNDRY_ONTOLOGY_RID=ri.ontology.main.ontology.xxxxxxxx
+```
+
+To find your Ontology RID:
+1. Navigate to your Ontology in Foundry
+2. Copy the RID from the URL
+3. Or use: `get_foundry_ontology_rid` if you have the Palantir MCP tool configured
 
 ### 4. Start Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Visit `http://localhost:3000` to see your app.
+Visit `http://localhost:3000` to use the research agent.
 
-## 🌟 Show Your Support
+## Available Commands
 
-Give a ⭐️ if this project helped you!
+```bash
+npm run dev         # Start dev server with Turbopack
+npm run build       # Production build
+npm run lint        # Run ESLint
+npm run test:api    # Test Foundry API connection
+npm run test:ontology  # Test ontology query functionality
+```
 
-If you have any question or want a custom build for your business, you can reach out to me via:
+## How It Works
 
-- E-mail : codebucks27@gmail.com
-- Twitter: https://twitter.com/code_bucks
-- Instagram: https://www.instagram.com/code.bucks/
+The research agent follows an iterative loop:
 
-MyChannel: https://www.youtube.com/codebucks
-My Website: https://devdreaming.com/
+1. **Planning**: Generates diverse search queries for both Ontology and Web sources
+2. **Search**: Executes queries against both sources simultaneously
+3. **Extract**: Summarizes and structures results from each source
+4. **Analyze**: Determines if findings are sufficient or generates follow-up queries
+5. **Report**: Compiles comprehensive markdown report with source attribution
+
+### Search Strategy
+
+The agent uses a dual-source approach:
+
+- **Ontology Search**: Queries internal company data, entities, and relationships
+- **Web Search**: Retrieves public information, best practices, and external context
+
+Results are clearly attributed, and the agent iteratively refines queries based on what it discovers in each source.
+
+## Documentation
+
+See `CLAUDE.md` for detailed technical documentation including:
+- Architecture overview
+- Research flow details
+- Foundry provider constraints
+- Tool implementation
+- Testing procedures
+
+## Project Structure
+
+```
+├── src/
+│   ├── app/
+│   │   └── api/deep-research/    # Research agent API
+│   ├── components/ui/             # UI components
+│   ├── lib/                       # Core libraries
+│   │   ├── foundry-provider.ts   # Foundry AI SDK setup
+│   │   └── foundry-client.ts     # Ontology API client
+│   └── store/                     # State management
+├── scripts/                       # Testing scripts
+└── docs/                          # Additional documentation
+```
+
+## License
+
+MIT
