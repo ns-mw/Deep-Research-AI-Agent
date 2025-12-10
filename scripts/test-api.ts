@@ -48,7 +48,7 @@ async function testGenerateQuestions() {
 async function testDeepResearch() {
   console.log('\n📋 Test 2: Deep Research (Streaming)');
   console.log('─'.repeat(50));
-  console.log('  Note: This test uses mocked search results');
+  console.log('  Testing with real Foundry web + ontology search');
 
   try {
     // The route expects messages array with content as JSON string
