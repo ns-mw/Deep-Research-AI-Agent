@@ -2,7 +2,7 @@
  * Foundry search tools - Web search and Ontology search
  */
 
-import { searchOntologyObjects } from '@/lib/foundry-client';
+import { searchOntologyObjects, listObjectTypes as listOntologyObjectTypes } from '@/lib/foundry-client';
 
 /**
  * Call a Foundry Ontology Query function via HTTP
@@ -55,7 +55,7 @@ async function callFoundryFunction(
  * The function expects: { queries: string[] }
  * Returns: JSON string with { success, totalQueries, searchResults: [...] }
  */
-async function webSearch(query: string): Promise<string> {
+export async function webSearch(query: string): Promise<string> {
   const functionName = process.env.FOUNDRY_WEB_SEARCH_FUNCTION_NAME || "searchWebBatch";
 
   // Debug logging
@@ -138,7 +138,7 @@ async function webSearch(query: string): Promise<string> {
  * Ontology search via Palantir Foundry Ontology API
  * Searches across ontology objects and returns relevant results
  */
-async function ontologySearch(query: string): Promise<string> {
+export async function ontologySearch(query: string): Promise<string> {
   try {
     console.log(`[LIVE] Ontology search for: ${query}`);
 
@@ -193,8 +193,30 @@ Please check your environment configuration.`;
 }
 
 /**
+ * List available object types in the Ontology
+ * Returns array of object type names (e.g., ["Employee", "Project", "Upload"])
+ */
+export async function listObjectTypes(): Promise<string[]> {
+  const ontologyRid = process.env.FOUNDRY_ONTOLOGY_RID;
+
+  if (!ontologyRid) {
+    console.warn('[listObjectTypes] FOUNDRY_ONTOLOGY_RID not set');
+    return [];
+  }
+
+  try {
+    const types = await listOntologyObjectTypes(ontologyRid);
+    return types;
+  } catch (error) {
+    console.error('[listObjectTypes] Error:', error);
+    return [];
+  }
+}
+
+/**
  * Execute both search tools and combine results.
  * Returns SearchResult[] format expected by research-functions.ts
+ * @deprecated Use webSearch() and ontologySearch() separately instead
  */
 export async function executeFoundrySearch(query: string) {
   const [webRes, ontologyRes] = await Promise.all([

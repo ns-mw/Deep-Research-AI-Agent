@@ -17,7 +17,7 @@ import {
   REPORT_SYSTEM_PROMPT,
 } from "./prompts";
 import { callModel } from "./model-caller";
-import { executeFoundrySearch } from "./foundry-tools";
+import { webSearch, ontologySearch } from "./foundry-tools";
 import { combineFindings, handleError } from "./utils";
 import { MAX_ITERATIONS, MODELS } from "./constants";
 
@@ -38,9 +38,14 @@ export async function generateSearchQueries(
       system: PLANNING_SYSTEM_PROMPT,
       schema: z.object({
         searchQueries: z
-          .array(z.string())
+          .array(
+            z.object({
+              query: z.string().describe("The search query text"),
+              source: z.enum(["web", "ontology"]).describe("Which search tool to use: 'web' for external internet search, 'ontology' for internal company data"),
+            })
+          )
           .describe(
-            "The search queries that can be used to find the most relevant content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
+            "Array of search queries with their designated source. Generate 2-5 queries using a mix of both sources. (max 5 queries)"
           ),
       }),
       activityType: "planning"
@@ -52,32 +57,48 @@ export async function generateSearchQueries(
 
   return result;
   }catch(error){
+    // If planning fails completely, use minimal fallback
     return handleError(error, `Research planning`, activityTracker, "planning", {
-        searchQueries: [`${researchState.topic} best practices`,`${researchState.topic} guidelines`, `${researchState.topic} examples`  ]
+        searchQueries: [
+          { query: researchState.topic, source: "web" }
+        ]
     })
-    
+
   }
 }
 
 export async function search(
   query: string,
+  source: "web" | "ontology",
   researchState: ResearchState,
   activityTracker: ActivityTracker
 ): Promise<SearchResult[]> {
-  activityTracker.add("search", "pending", `Searching for ${query}`);
+  const sourceLabel = source === "web" ? "Web" : "Ontology";
+  activityTracker.add("search", "pending", `Searching ${sourceLabel} for ${query}`);
 
   try {
-    // Execute both web and ontology search via Foundry tools
-    const results = await executeFoundrySearch(query);
+    let content: string;
+    let title: string;
+    let url: string;
+
+    if (source === "web") {
+      content = await webSearch(query);
+      title = "Web Results";
+      url = "Firecrawl";
+    } else {
+      content = await ontologySearch(query);
+      title = "Ontology Results";
+      url = "Foundry";
+    }
 
     researchState.completedSteps++;
 
-    activityTracker.add("search", "complete", `Found ${results.length} results for ${query}`);
+    activityTracker.add("search", "complete", `Found ${sourceLabel} results for ${query}`);
 
-    return results;
+    return [{ title, url, content }];
   } catch (error) {
     console.log("error: ", error);
-    return handleError(error, `Searching for ${query}`, activityTracker, "search", []) || [];
+    return handleError(error, `Searching ${sourceLabel} for ${query}`, activityTracker, "search", []) || [];
   }
 }
 
@@ -180,9 +201,14 @@ export async function analyzeFindings(
             ),
           gaps: z.array(z.string()).describe("Identified gaps in the content"),
           queries: z
-            .array(z.string())
+            .array(
+              z.object({
+                query: z.string().describe("The search query text"),
+                source: z.enum(["web", "ontology"]).describe("Which search tool to use"),
+              })
+            )
             .describe(
-              "Search queries for missing informationo. Max 3 queries."
+              "Search queries for missing information with designated source. Max 5 queries."
             ),
         }),
         activityType: "analyze"
@@ -198,8 +224,8 @@ export async function analyzeFindings(
   } catch (error) {
     return handleError(error, `Content analysis`, activityTracker, "analyze", {
         sufficient: false,
-        gaps: ["Unable to analyz content"],
-        queries: ["Please try a different search query"]
+        gaps: ["Unable to analyze content"],
+        queries: [{ query: "Please try a different search query", source: "web" }]
     })
   }
 }
